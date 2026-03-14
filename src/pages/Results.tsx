@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import themeMusic from '../assets/theme.mp3';
 
+// importing the survey asset
+import postSurveyQR from '../assets/postsurvey.png';
+
 export default function Results() {
   const { state, resetGame } = useGame();
   const navigate = useNavigate();
@@ -78,14 +81,29 @@ export default function Results() {
         </header>
 
         <div style={mainGrid}>
-          {/* visual card for the big percentage score */}
-          <div style={scoreCard}>
-            <div style={{ fontSize: '0.8rem', opacity: 0.6, letterSpacing: '2px' }}>OVERALL SAFETY RATING</div>
-            <div style={{ fontSize: '6rem', color: stats.score > 50 ? '#00ff88' : '#ff3333', margin: '20px 0', textShadow: `0 0 30px ${stats.score > 50 ? 'rgba(0,255,136,0.5)' : 'rgba(255,51,51,0.5)'}` }}>
-              {stats.score}%
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* visual card for the big percentage score */}
+            <div style={scoreCard}>
+              <div style={{ fontSize: '0.8rem', opacity: 0.6, letterSpacing: '2px' }}>OVERALL SAFETY RATING</div>
+              <div style={{ fontSize: '6rem', color: stats.score > 50 ? '#00ff88' : '#ff3333', margin: '20px 0', textShadow: `0 0 30px ${stats.score > 50 ? 'rgba(0,255,136,0.5)' : 'rgba(255,51,51,0.5)'}` }}>
+                {stats.score}%
+              </div>
+              <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: stats.score > 0 ? '#fff' : '#ff3333' }}>
+                {stats.grade}
+              </div>
             </div>
-            <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: stats.score > 0 ? '#fff' : '#ff3333' }}>
-              {stats.grade}
+
+            {/* NEW: Post-survey feedback box */}
+            <div style={{ padding: '25px', border: '1px solid #00ff88', background: 'rgba(0, 255, 136, 0.05)', textAlign: 'center', borderRadius: '4px' }}>
+              <div style={{ color: '#00ff88', fontWeight: 'bold', fontSize: '0.9rem', marginBottom: '10px', letterSpacing: '1px' }}>MISSION COMPLETE: FEEDBACK REQUIRED</div>
+              <p style={{ color: '#88aa99', fontSize: '0.8rem', marginBottom: '20px', lineHeight: '1.4' }}>
+                Please scan the code below to complete the post-escape room survey and help with our research.
+              </p>
+              <img 
+                src={postSurveyQR} 
+                alt="Post-Survey QR" 
+                style={{ width: '140px', height: '140px', border: '2px solid #fff', display: 'block', margin: '0 auto' }} 
+              />
             </div>
           </div>
 

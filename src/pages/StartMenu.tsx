@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-// assets for the survey modal
+// assets for the survey modal and background music
 import preSurveyQR from "../assets/presurvey.png";
 import postSurveyQR from "../assets/postsurvey.png";
+import themeMusic from "../assets/theme.mp3";
 
 const styles = `
   @keyframes scanline {
@@ -46,6 +47,30 @@ export default function StartMenu() {
   const [showProtocols, setShowProtocols] = useState(false);
   const [showSurveys, setShowSurveys] = useState(false);
 
+  // reference for the theme music audio
+  const audioRef = useRef(new Audio(themeMusic));
+
+  useEffect(() => {
+    // sets up the theme music to loop and kills it when leaving the page
+    const audio = audioRef.current;
+    audio.loop = true;
+    audio.volume = 0.5;
+    
+    // handles autoplay browser restrictions
+    const playAudio = () => {
+        audio.play().catch(() => {
+            window.addEventListener('click', () => audio.play(), { once: true });
+        });
+    };
+    
+    playAudio();
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
+
   return (
     <div style={{
       width: "100vw", height: "100vh", backgroundColor: "#050505",
@@ -58,7 +83,7 @@ export default function StartMenu() {
       
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, transparent 50%, #000 120%)', pointerEvents: 'none' }} />
 
-      {/* protocols modal */}
+      {/* protocol briefing popup */}
       {showProtocols && (
         <div className="modal-overlay" onClick={() => setShowProtocols(false)}>
           <div style={{ 
@@ -82,7 +107,7 @@ export default function StartMenu() {
         </div>
       )}
 
-      {/* survey/important modal */}
+      {/* survey instructions and qr codes */}
       {showSurveys && (
         <div className="modal-overlay" onClick={() => setShowSurveys(false)}>
           <div style={{ 
@@ -113,7 +138,7 @@ export default function StartMenu() {
         </div>
       )}
 
-      {/* connection info display */}
+      {/* connection overlay text */}
       <div style={{ 
         position: "absolute", top: "25%", width: "100%", maxWidth: "650px", 
         display: "flex", justifyContent: "space-between", fontSize: "0.65rem", 
@@ -123,7 +148,7 @@ export default function StartMenu() {
         <span>ENCRYPTION: AES-256</span>
       </div>
 
-      {/* the centered main title section */}
+      {/* hero title section */}
       <div style={{ textAlign: "center", marginBottom: "40px", zIndex: 10 }}>
         <h2 style={{ fontSize: "2.2rem", margin: 0, color: "#00ff88", letterSpacing: "8px" }}>REVERSE</h2>
         <h1 style={{ 
@@ -133,7 +158,7 @@ export default function StartMenu() {
         <h2 style={{ fontSize: "2.2rem", margin: 0, color: "#00ff88", letterSpacing: "8px" }}>ESCAPE ROOM</h2>
       </div>
 
-      {/* small mission brief box */}
+      {/* mission briefing text box */}
       <div style={{ 
         border: "1px solid #00ff88", background: "rgba(0, 20, 0, 0.4)", 
         padding: "15px 25px", maxWidth: "550px", textAlign: "center", 
@@ -144,14 +169,14 @@ export default function StartMenu() {
         </p>
       </div>
 
-      {/* action buttons */}
+      {/* main buttons */}
       <div style={{ display: "flex", gap: "15px", zIndex: 10 }}>
         <button onClick={() => navigate("/intro")} className="cyber-btn" style={{
           padding: "12px 30px", background: "none", border: "1px solid #00ff88", 
           color: "#00ff88", fontSize: "0.9rem", cursor: "pointer", fontWeight: "bold",
           display: "flex", alignItems: "center", gap: "10px", borderRadius: "4px"
         }}>
-          <span>▶</span> INITIALIZE MISSION
+          <span style={{ fontSize: "0.7rem" }}>▶</span> INITIALISE MISSION
         </button>
 
         <button onClick={() => setShowProtocols(true)} className="cyber-btn" style={{
@@ -159,18 +184,18 @@ export default function StartMenu() {
           color: "#fff", fontSize: "0.9rem", cursor: "pointer", borderRadius: "4px",
           display: "flex", alignItems: "center", gap: "10px"
         }}>
-          <span>i</span> PROTOCOLS
+          <span style={{ fontSize: "0.7rem" }}>i</span> PROTOCOLS
         </button>
 
         <button onClick={() => setShowSurveys(true)} className="cyber-btn important-btn" style={{
           padding: "12px 30px", background: "none", fontSize: "0.9rem", cursor: "pointer", borderRadius: "4px",
           display: "flex", alignItems: "center", gap: "10px"
         }}>
-          <span>!</span> IMPORTANT
+          <span style={{ fontSize: "0.7rem" }}>!</span> IMPORTANT
         </button>
       </div>
 
-      {/* visual overlay for crt effect */}
+      {/* simulated crt scanlines */}
       <div style={{
         position: 'absolute', inset: 0, background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%)',
         backgroundSize: '100% 4px', pointerEvents: 'none', opacity: 0.3
