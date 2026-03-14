@@ -1,0 +1,114 @@
+/* --- BASE SYSTEM CONFIGURATION --- */
+:root {
+  /* Share Tech Mono is the standard for hacking/terminal UIs */
+  font-family: 'Share Tech Mono', monospace;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #00ff88;
+  background-color: #000;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: block; 
+  min-width: 320px;
+  min-height: 100vh;
+  background: #000;
+  overflow-x: hidden; /* Prevents scrollbars during heavy screen shakes */
+}
+
+/* --- THE GLITCH SYSTEM (FAILING FORWARD) --- */
+
+/* Digital Distortion: Jitters the screen and messes with colors */
+@keyframes dashboardGlitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-3px, 3px); filter: hue-rotate(90deg) brightness(1.3); }
+  40% { transform: translate(-3px, -3px); clip-path: inset(10% 0 30% 0); }
+  60% { transform: translate(3px, 3px); filter: sepia(1) saturate(5); }
+  80% { transform: translate(3px, -3px); clip-path: inset(40% 0 10% 0); }
+  100% { transform: translate(0); }
+}
+
+/* Scanline: A red horizontal bar that moves down the screen */
+@keyframes scanline {
+  0% { top: -10%; opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { top: 110%; opacity: 0; }
+}
+
+/* This class is applied to the Dashboard container when Wifi is compromised */
+.compromised-glitch {
+  animation: dashboardGlitch 0.2s infinite !important;
+  border: 3px solid #ff3333 !important;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add a red scanline overlay only when compromised */
+.compromised-glitch::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 0, 0, 0.6);
+  box-shadow: 0 0 15px #ff0000;
+  z-index: 100;
+  pointer-events: none;
+  animation: scanline 3s linear infinite;
+}
+
+/* --- TERMINAL UI ELEMENTS --- */
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+}
+
+button {
+  border-radius: 2px;
+  border: 1px solid #00ff88;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: 'Share Tech Mono', monospace;
+  background-color: transparent;
+  color: #00ff88;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+button:hover {
+  background-color: #00ff88;
+  color: #000;
+  box-shadow: 0 0 10px #00ff88;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Links inside the terminal environment */
+a {
+  font-weight: 500;
+  color: #00ff88;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s;
+}
+
+a:hover {
+  border-bottom: 1px solid #00ff88;
+}
