@@ -45,7 +45,6 @@ const ThreatMap = ({ tasks }: { tasks: Record<string, boolean> }) => {
 
 export default function ThreatDashboard() {
   const [viewState, setViewState] = useState<DashboardState>("DORMANT");
-  const [bootLogs, setBootLogs] = useState<string[]>([]);
   const [gameData, setGameData] = useState<any>({
     vulnerabilities: 700,
     tasks: { wifi: false, vpn: false, password: false, firewall: false, mfa: false, forensics: false, incident: false }
@@ -75,7 +74,6 @@ export default function ThreatDashboard() {
       const msgs = ["{'>'} SYNC_CORE...", "{'>'} MONITOR_LIVE."];
       let i = 0;
       const interval = setInterval(() => {
-        setBootLogs(prev => [...prev, msgs[i]]); i++;
         if (i >= msgs.length) { clearInterval(interval); setTimeout(() => setViewState("ACTIVE"), 400); }
       }, 400);
       return () => clearInterval(interval);

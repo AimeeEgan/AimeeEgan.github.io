@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from '../context/GameContext';
-import { IS_PUBLIC_MODE } from "../config";
 import HUD from '../components/HUD';
 
 // loading our sounds and icons
@@ -202,7 +201,7 @@ export default function WifiChallenge() {
         </div>
 
         {/* right sidebar: saved wifi info with the reveal mechanic */}
-        {IS_PUBLIC_MODE && (
+        {true && (
           <div style={sidebarStyle}>
             <strong style={{ color: '#00ffff' }}>[WIFI_INFO]</strong>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px' }}>

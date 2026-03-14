@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import CaptivePortal from "./CaptivePortal";
 import secureWifi from "../../assets/securewifi.png";
 

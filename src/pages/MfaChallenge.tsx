@@ -10,7 +10,6 @@ import redSound from '../assets/red.mp3';
 import greenSound from '../assets/green.mp3';
 import blueSound from '../assets/blue.mp3';
 import yellowSound from '../assets/yellow.mp3';
-import typingSoundFile from '../assets/typing.mp3';
 
 const COLORS = ["#ff3333", "#33ff33", "#3333ff", "#ffff33"];
 

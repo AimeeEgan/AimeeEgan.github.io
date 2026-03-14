@@ -17,7 +17,7 @@ export default function FinancialRiskGraph({ vulnerabilities }: { vulnerabilitie
 
   const timeProgressX = ((totalTime - timeLeft) / totalTime) * 100;
   
-  const { linePoints, areaPoints, dataPoints, targetY } = useMemo(() => {
+  const { linePoints, areaPoints, dataPoints } = useMemo(() => {
     const pts = [];
     const steps = 100;
     const tY = 95 - ((currentLoss / maxCost) * 85);

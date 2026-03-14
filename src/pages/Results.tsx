@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import { IS_PUBLIC_MODE } from '../config'; 
 import themeMusic from '../assets/theme.mp3';
 
 export default function Results() {
@@ -47,7 +46,7 @@ export default function Results() {
 
   useEffect(() => {
     // recording the run in the local leaderboard if not in public mode
-    if (IS_PUBLIC_MODE) return;
+    if (true) return;
 
     const leaderboard = JSON.parse(localStorage.getItem('cyber_leaderboard') || '[]');
     const runId = `${teamName}-${Date.now()}`;
@@ -130,7 +129,7 @@ export default function Results() {
 
         <div style={buttonContainer}>
           {/* leaderboard button only shows if it's not the public web version */}
-          {!IS_PUBLIC_MODE && (
+          {!true && (
             <button onClick={() => navigate('/leaderboard')} style={secondaryBtn}>
               SEE THE TOP SCORES
             </button>

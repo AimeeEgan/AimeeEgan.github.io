@@ -16,31 +16,31 @@ const MEDIUM_LIST = ["South Korea", "Brazil", "Portugal", "Japan", "Iceland","No
 const HARD_LIST = ["Taiwan", "Hungary", "Chile", "South Africa", "New Zealand","Peru"];
 
 // dummy ip addresses to make the ui look realistic
-const ipData = {
-  default: { ip: "92.40.185.12", loc: "United Kingdom" },
-  "United States of America": { ip: "50.116.34.122", loc: "USA" },
-  "Germany": { ip: "85.214.132.117", loc: "Germany" },
-  "France": { ip: "92.247.180.211", loc: "France" },
-  "United Kingdom": { ip: "109.157.92.14", loc: "United Kingdom" },
-  "Spain": { ip: "81.45.18.129", loc: "Spain" },
-  "Canada": { ip: "192.0.2.1", loc: "Canada" },
-  "Italy": { ip: "79.12.110.5", loc: "Italy" },
-  "Madagascar": { ip: "197.158.10.1", loc: "Madagascar" },
-  "South Korea": { ip: "112.220.101.34", loc: "South Korea" },
-  "Brazil": { ip: "177.44.248.11", loc: "Brazil" },
-  "Portugal": { ip: "85.202.10.150", loc: "Portugal" },
-  "Japan": { ip: "133.106.32.8", loc: "Japan" },
-  "Iceland": { ip: "193.4.110.18", loc: "Iceland" },
-  "Norway": { ip: "82.135.150.1", loc: "Norway" },
-  "Australia": { ip: "101.188.66.17", loc: "Australia" },
-  "India": { ip: "103.102.130.4", loc: "India" },
-  "Taiwan": { ip: "114.32.128.255", loc: "Taiwan" },
-  "Hungary": { ip: "84.206.11.100", loc: "Hungary" },
-  "Chile": { ip: "181.168.128.1", loc: "Chile" },
-  "South Africa": { ip: "105.185.24.1", loc: "South Africa" },
-  "New Zealand": { ip: "101.100.189.1", loc: "New Zealand" },
-  "Peru": { ip: "181.65.128.1", loc: "Peru" },
-};
+// const ipData = {
+//   default: { ip: "92.40.185.12", loc: "United Kingdom" },
+//   "United States of America": { ip: "50.116.34.122", loc: "USA" },
+//   "Germany": { ip: "85.214.132.117", loc: "Germany" },
+//   "France": { ip: "92.247.180.211", loc: "France" },
+//   "United Kingdom": { ip: "109.157.92.14", loc: "United Kingdom" },
+//   "Spain": { ip: "81.45.18.129", loc: "Spain" },
+//   "Canada": { ip: "192.0.2.1", loc: "Canada" },
+//   "Italy": { ip: "79.12.110.5", loc: "Italy" },
+//   "Madagascar": { ip: "197.158.10.1", loc: "Madagascar" },
+//   "South Korea": { ip: "112.220.101.34", loc: "South Korea" },
+//   "Brazil": { ip: "177.44.248.11", loc: "Brazil" },
+//   "Portugal": { ip: "85.202.10.150", loc: "Portugal" },
+//   "Japan": { ip: "133.106.32.8", loc: "Japan" },
+//   "Iceland": { ip: "193.4.110.18", loc: "Iceland" },
+//   "Norway": { ip: "82.135.150.1", loc: "Norway" },
+//   "Australia": { ip: "101.188.66.17", loc: "Australia" },
+//   "India": { ip: "103.102.130.4", loc: "India" },
+//   "Taiwan": { ip: "114.32.128.255", loc: "Taiwan" },
+//   "Hungary": { ip: "84.206.11.100", loc: "Hungary" },
+//   "Chile": { ip: "181.168.128.1", loc: "Chile" },
+//   "South Africa": { ip: "105.185.24.1", loc: "South Africa" },
+//   "New Zealand": { ip: "101.100.189.1", loc: "New Zealand" },
+//   "Peru": { ip: "181.65.128.1", loc: "Peru" },
+// };
 
 const getRandomCountry = (list: string[]) => {
   return list[Math.floor(Math.random() * list.length)];
@@ -195,7 +195,7 @@ export default function VpnChallenge() {
 
     // helper function to draw connecting lines between nodes
     const drawConnection = (startName: string, endName: string, color: string, animate: boolean) => {
-      const startFeature = worldData.features.find(f => f.properties?.admin === startName);
+      const startFeature = worldData.features.find(f  => f.properties?.admin === startName);
       const endFeature = worldData.features.find(f => f.properties?.admin === endName);
       if (!startFeature || !endFeature) return;
       const startCoords = projection(d3.geoCentroid(startFeature));

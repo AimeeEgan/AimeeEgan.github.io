@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import { IS_PUBLIC_MODE } from '../config';
 import HUD from '../components/HUD';
 
 // assets for sounds
@@ -42,7 +41,7 @@ const ScrambleText = ({ length }: { length: number }) => {
 };
 
 export default function EncryptionChallenge() {
-  const { state, completeTask, penalize } = useGame();
+  const { state, completeTask } = useGame();
   const navigate = useNavigate();
 
   // keeping track of which part of the challenge the player is on
@@ -260,7 +259,7 @@ export default function EncryptionChallenge() {
                 <strong>TOOL:</strong> Use the wheel below to simulate the shift.
             </div>
 
-            {IS_PUBLIC_MODE && (
+            {true && (
                 <div style={{ marginTop: '30px', textAlign: 'center' }}>
                 <div style={{ position: 'relative', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ ...wheelBase, transform: `rotate(-${Number(cipherShift) * (360/26)}deg)` }}>
