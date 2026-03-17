@@ -92,8 +92,3 @@ export default function App() {
 
           {/* --- CATCH-ALL --- */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </GameProvider>
-  );
-}
