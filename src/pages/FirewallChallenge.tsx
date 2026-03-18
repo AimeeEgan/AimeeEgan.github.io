@@ -73,6 +73,9 @@ export default function FirewallChallenge() {
   const buffers = useRef<Record<string, AudioBuffer>>({});
 
   useEffect(() => {
+    // initialize wave tracking for the AI bot
+    sessionStorage.setItem("active_wave", "1");
+
     audioCtx.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     const loadSound = async (name: string, url: string) => {
       const response = await fetch(url);
@@ -105,7 +108,7 @@ export default function FirewallChallenge() {
   const introScript = wave === 1 ? [
     { text: "PROTOCOL_OVERVIEW: FIREWALL_ISOLATION", color: "#00ff88", isHeader: true },
     { text: "A firewall is a network security system that monitors and controls incoming and outgoing network traffic based on predetermined security rules. It acts as a barrier between a trusted internal network and untrusted external traffic.", color: "#fff" },
-    { text: "MISSION: Secure the core network by sliding vulnerable ports into the Red Quarantine Zone on the right.", color: "#ff3333" }
+    { text: "MISSION: Secure the core network by clicking to slide vulnerable ports into the Red Quarantine Zone on the right.", color: "#ff3333" }
   ] : [
     { text: "PROTOCOL_OVERVIEW: DEEP_PACKET_INSPECTION", color: "#00ff88", isHeader: true },
     { text: "Advanced firewalls perform Deep Packet Inspection (DPI). This goes beyond simple IP/Port rules to analyze the actual 'payload' of the data to find hidden malicious commands.", color: "#fff" },
@@ -183,6 +186,7 @@ export default function FirewallChallenge() {
     if (allQuarantined && essentialsSafe) { 
       playInstantSound('correct');
       setWave(2); 
+      sessionStorage.setItem("active_wave", "2"); // Notify AI sentinel
       setStatus("briefing"); 
     }
   }, [tiles, wave, status]);
@@ -269,7 +273,7 @@ export default function FirewallChallenge() {
       <h1 style={{ letterSpacing: "5px", marginBottom: "5px" }}>FIREWALL_v4</h1>
       
       {wave === 1 && status === "playing" && (
-        <p style={{ color: '#ff3333', fontSize: '1rem', marginBottom: '20px', fontWeight: 'bold', textTransform: 'uppercase' }}>Slide vulnerable ports into the Red Quarantine Zone on the right.</p>
+        <p style={{ color: '#ff3333', fontSize: '1rem', marginBottom: '20px', fontWeight: 'bold', textTransform: 'uppercase' }}>Click to Slide vulnerable ports into the Red Quarantine Zone on the right.</p>
       )}
 
       <div style={intelBar}>{`> ${hoveredDesc || "Monitoring network layers..."}`}</div>

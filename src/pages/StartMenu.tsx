@@ -40,23 +40,36 @@ const styles = `
   .qr-image {
     width: 150px; height: 150px; margin-top: 10px; border: 2px solid #fff;
   }
+  .lockout-text {
+    color: #ff3333; text-shadow: 0 0 15px #ff3333; letter-spacing: 2px;
+  }
 `;
 
 export default function StartMenu() {
   const navigate = useNavigate();
   const [showProtocols, setShowProtocols] = useState(false);
   const [showSurveys, setShowSurveys] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // reference for the theme music audio
   const audioRef = useRef(new Audio(themeMusic));
 
   useEffect(() => {
-    // sets up the theme music to loop and kills it when leaving the page
+    // 1. Device detection logic
+    const checkDevice = () => {
+      const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+      const isMobileDevice = mobileRegex.test(navigator.userAgent) || window.innerWidth < 1024;
+      setIsMobile(isMobileDevice);
+    };
+
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+
+    // 2. Audio setup
     const audio = audioRef.current;
     audio.loop = true;
     audio.volume = 0.5;
     
-    // handles autoplay browser restrictions
     const playAudio = () => {
         audio.play().catch(() => {
             window.addEventListener('click', () => audio.play(), { once: true });
@@ -68,8 +81,34 @@ export default function StartMenu() {
     return () => {
       audio.pause();
       audio.currentTime = 0;
+      window.removeEventListener('resize', checkDevice);
     };
   }, []);
+
+  // --- MOBILE LOCKOUT SCREEN ---
+  if (isMobile) {
+    return (
+      <div style={{
+        width: "100vw", height: "100vh", backgroundColor: "#000",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", fontFamily: "'Share Tech Mono', monospace",
+        padding: "20px", textAlign: "center", boxSizing: "border-box"
+      }}>
+        <style>{styles}</style>
+        <div style={{ border: '2px solid #ff3333', padding: '40px', background: 'rgba(20,0,0,0.5)', boxShadow: '0 0 40px rgba(255, 51, 51, 0.2)' }}>
+          <h1 className="lockout-text" style={{ fontSize: '2.5rem', marginBottom: '20px' }}>⚠ ACCESS_DENIED</h1>
+          <h2 style={{ color: '#fff', fontSize: '1.2rem', marginBottom: '20px' }}>DESKTOP_INTERFACE_REQUIRED</h2>
+          <p style={{ color: '#888', fontSize: '0.9rem', lineHeight: '1.6', maxWidth: '400px' }}>
+            Mission protocols dictate that this secure terminal is only accessible via desktop workstations. 
+            Mobile/Tablet uplink has been disabled for operational security.
+          </p>
+          <div style={{ marginTop: '30px', color: '#ff3333', fontSize: '0.7rem', opacity: 0.6 }}>
+            ERROR_CODE: ERR_HARDWARE_INCOMPATIBLE
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{

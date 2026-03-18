@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import HUD from '../components/HUD';
 import { useGame } from "../context/GameContext";
@@ -190,6 +190,9 @@ export default function PasswordChallenge() {
   const buffers = useRef<Record<string, AudioBuffer>>({});
 
   useEffect(() => {
+    // initialize wave tracking for AI Sentinel
+    sessionStorage.setItem("active_wave", "1");
+
     audioCtx.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     
     const loadSound = async (name: string, url: string) => {
@@ -305,6 +308,7 @@ export default function PasswordChallenge() {
     const currentEntry = dialPositions.map((pos, i) => dialData[i][pos]).join("");
     if (currentEntry === activeAccount.weakPassword) {
       playFeedback(true);
+      sessionStorage.setItem("active_wave", "2"); // Notify AI Sentinel
       setPhase2Account(activeAccount);
       setActiveAccount(null);
     } else {
@@ -336,6 +340,7 @@ export default function PasswordChallenge() {
           ringerAudio.current.play().catch(e => console.warn(e));
         }, 1500);
       } else {
+        sessionStorage.setItem("active_wave", "1"); // Revert for next account selection
         setPhase2Account(null);
         setGuesses([]);
         setAnalysisDisplay(null);
@@ -399,7 +404,6 @@ export default function PasswordChallenge() {
         .nav-btn:hover { background: rgba(0, 255, 136, 0.1); }
       `}</style>
 
-      {/* header stuff */}
       <header style={{ marginTop: "60px", padding: "20px 40px", borderBottom: "1px solid #005522", display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
            <h1 style={{ margin: 0, fontSize: "2rem", textShadow: "0 0 10px #00ff88" }}>PASSWORD_REMEDIATION</h1>
@@ -413,7 +417,6 @@ export default function PasswordChallenge() {
 
       <main style={{ flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", padding: "20px" }}>
         
-        {/* selecting which person to help */}
         {!phase2Account && !showVishingEducation && !incomingCall && !activeAccount && (
           <div style={{ width: "100%", maxWidth: "1200px", animation: "fadeIn 0.5s ease" }}>
             <p style={{ textAlign: "center", marginBottom: "40px", fontSize: "1.2rem" }}>[MISSION]: The following passwords have been identified as Vulnerable. Access the accounts to start patching.</p>
@@ -446,7 +449,6 @@ export default function PasswordChallenge() {
           </div>
         )}
 
-        {/* typing in the new secure password */}
         {phase2Account && !showVishingEducation && !incomingCall && (
           <div style={{ width: "100%", maxWidth: "800px", textAlign: "center", animation: "fadeIn 0.5s ease" }}>
              <h2 style={{ color: "#fff", fontSize: "1.8rem", marginBottom: "5px" }}>CREATE NEW SECURE PASSWORD</h2>
@@ -490,7 +492,6 @@ export default function PasswordChallenge() {
           </div>
         )}
 
-        {/* the fake hacker phone call overlay */}
         {incomingCall && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ background: '#000', border: '2px solid #00ffff', padding: '50px', textAlign: 'center', width: '500px', boxShadow: '0 0 30px rgba(0,255,255,0.2)' }}>
@@ -524,7 +525,6 @@ export default function PasswordChallenge() {
           </div>
         )}
 
-        {/* education screen about phone phishing */}
         {showVishingEducation && (
           <div style={{ background: '#000', border: '2px solid #00ff88', padding: '50px', maxWidth: '650px', textAlign: 'left', animation: 'fadeIn 0.5s' }}>
              <h2 style={{ color: '#00ff88' }}>THREAT_NEUTRALIZED</h2>
@@ -542,7 +542,6 @@ export default function PasswordChallenge() {
         )}
       </main>
 
-      {/* dial combination lock for getting into the accounts */}
       {activeAccount && dialData.length > 0 && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 10 }}>
           <div style={{ background: "#001a00", padding: "40px", borderRadius: "8px", width: "600px", border: "2px solid #00ff88", boxShadow: "0 0 30px rgba(0,255,136,0.1)" }}>
@@ -552,7 +551,7 @@ export default function PasswordChallenge() {
               <div>DOB: <span style={{ color: "#fff" }}>{activeAccount.dob}</span></div>
             </div>
             
-            <p>Rotate the dials to align the credentials found in the vault:</p>
+            <p>Rotate the dials and listen carefully to align the credentials:</p>
             
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', margin: '30px 0' }}>
               {dialData.map((chars, i) => {
@@ -581,7 +580,6 @@ export default function PasswordChallenge() {
         </div>
       )}
 
-      {/* footer bar */}
       <footer style={{ height: "40px", borderTop: "1px solid #005522", background: "rgba(0, 10, 0, 0.8)", display: "flex", alignItems: "center", padding: "0 40px", fontSize: "0.8rem", color: "#005522" }}>
         TERMINAL_CONNECTED // {new Date().toLocaleDateString()} // BOE_INTERNAL_NETWORK
       </footer>
@@ -589,7 +587,6 @@ export default function PasswordChallenge() {
   );
 }
 
-// basic container styles
 const containerStyle: React.CSSProperties = { 
   backgroundColor: "#020502", 
   backgroundImage: "linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px)",

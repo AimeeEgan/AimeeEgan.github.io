@@ -15,32 +15,6 @@ const EASY_LIST = ["United States of America", "Germany", "France", "Spain","Can
 const MEDIUM_LIST = ["South Korea", "Brazil", "Portugal", "Japan", "Iceland","Norway","Australia","India"];
 const HARD_LIST = ["Taiwan", "Hungary", "Chile", "South Africa", "New Zealand","Peru"];
 
-// dummy ip addresses to make the ui look realistic
-// const ipData = {
-//   default: { ip: "92.40.185.12", loc: "United Kingdom" },
-//   "United States of America": { ip: "50.116.34.122", loc: "USA" },
-//   "Germany": { ip: "85.214.132.117", loc: "Germany" },
-//   "France": { ip: "92.247.180.211", loc: "France" },
-//   "United Kingdom": { ip: "109.157.92.14", loc: "United Kingdom" },
-//   "Spain": { ip: "81.45.18.129", loc: "Spain" },
-//   "Canada": { ip: "192.0.2.1", loc: "Canada" },
-//   "Italy": { ip: "79.12.110.5", loc: "Italy" },
-//   "Madagascar": { ip: "197.158.10.1", loc: "Madagascar" },
-//   "South Korea": { ip: "112.220.101.34", loc: "South Korea" },
-//   "Brazil": { ip: "177.44.248.11", loc: "Brazil" },
-//   "Portugal": { ip: "85.202.10.150", loc: "Portugal" },
-//   "Japan": { ip: "133.106.32.8", loc: "Japan" },
-//   "Iceland": { ip: "193.4.110.18", loc: "Iceland" },
-//   "Norway": { ip: "82.135.150.1", loc: "Norway" },
-//   "Australia": { ip: "101.188.66.17", loc: "Australia" },
-//   "India": { ip: "103.102.130.4", loc: "India" },
-//   "Taiwan": { ip: "114.32.128.255", loc: "Taiwan" },
-//   "Hungary": { ip: "84.206.11.100", loc: "Hungary" },
-//   "Chile": { ip: "181.168.128.1", loc: "Chile" },
-//   "South Africa": { ip: "105.185.24.1", loc: "South Africa" },
-//   "New Zealand": { ip: "101.100.189.1", loc: "New Zealand" },
-//   "Peru": { ip: "181.65.128.1", loc: "Peru" },
-// };
 
 const getRandomCountry = (list: string[]) => {
   return list[Math.floor(Math.random() * list.length)];
@@ -265,8 +239,26 @@ export default function VpnChallenge() {
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: "2.2rem" }}>VPN_TUNNEL_PROTOCOL</h1>
-          <p style={{ color: "#88aa99" }}>Current Objective: Find {targetCountries[step] || "SECURED"}</p>
+          
+          <div style={{ 
+            marginTop: "10px", 
+            padding: "10px 20px", 
+            background: "rgba(0, 255, 136, 0.1)", 
+            borderLeft: "4px solid #00ff88",
+            display: "inline-block"
+          }}>
+            <span style={{ color: "#fff", fontSize: "1.2rem", letterSpacing: "1px" }}>CURRENT OBJECTIVE: </span>
+            <span style={{ 
+              color: "#00ff88", 
+              fontSize: "1.6rem", 
+              fontWeight: "bold", 
+              textTransform: "uppercase" 
+            }}>
+              CLICK ON {targetCountries[step] || "SECURED"}
+            </span>
+          </div>
         </div>
+        
         {/* visual for how many fails they have left */}
         <div style={{ textAlign: 'right', border: '1px solid #00ff88', padding: '10px 20px', background: 'rgba(0,40,0,0.5)' }}>
             <div style={{ fontSize: "0.7rem", opacity: 0.7 }}>ATTEMPTS_REMAINING</div>

@@ -75,6 +75,11 @@ export default function EncryptionChallenge() {
   const [introText, setIntroText] = useState("");
   const fullIntro = "Encryption is the process of scrambling plaintext into unreadable ciphertext using a mathematical algorithm and a secret key. Even if the hacker breaches our servers, they cannot read sensitive data without the specific Cypher Key. Your mission: Decide which files are our high-priority assets and encrypt them.";
 
+  // setup wave tracking for AI Sentinel on mount
+  useEffect(() => {
+    sessionStorage.setItem("active_wave", "1");
+  }, []);
+
   // stop them from playing again if they already finished
   if (state.tasks.encryption) {
     return (
@@ -137,7 +142,9 @@ export default function EncryptionChallenge() {
         wrongAudio.current.play().catch(() => {});
         setMistakeCount(prev => prev + 1);
       }
-      if (direction === 'right') setVaultFiles(prev => [...prev, currentFile]);
+      
+      const newVault = direction === 'right' ? [...vaultFiles, currentFile] : vaultFiles;
+      if (direction === 'right') setVaultFiles(newVault);
       
       // move to next card or start the quiz
       if (currentIndex < TRIAGE_DATA.length - 1) {
@@ -145,8 +152,13 @@ export default function EncryptionChallenge() {
         setSwipeDir(null);
         setOffsetX(0);
       } else {
-        if (vaultFiles.length === 0 && direction !== 'right') setPhase('SUCCESS');
-        else setPhase('QUIZ');
+        if (newVault.length === 0) {
+          setPhase('SUCCESS');
+        } else {
+          // TRANSITION: Move to phase 2 advice
+          sessionStorage.setItem("active_wave", "2");
+          setPhase('QUIZ');
+        }
       }
     }, 400);
   };
@@ -236,7 +248,7 @@ export default function EncryptionChallenge() {
       <div style={modalStyle}>
         <h2 style={glowText}>ENCRYPTION_TRIAGE_INIT</h2>
         <p style={{ lineHeight: '1.6', height: '110px' }}>{introText}</p>
-        {introText.length >= fullIntro.length && <button onClick={() => setPhase('TRIAGE')} style={actionBtn}>INITIALIZE TRIAGE</button>}
+        {introText.length >= fullIntro.length && <button onClick={() => setPhase('TRIAGE')} style={actionBtn}>INITIALISE TRIAGE</button>}
       </div>
     </div>
   );
@@ -245,10 +257,9 @@ export default function EncryptionChallenge() {
     <div style={containerStyle} onMouseMove={onDragMove} onMouseUp={onDragEnd} onTouchMove={onDragMove} onTouchEnd={onDragEnd}>
       <HUD />
       
-      {/* this container scales the triage and quiz layout to fit the screen better */}
       <div style={{ display: 'flex', width: '100%', height: 'calc(100% - 100px)', alignItems: 'center', justifyContent: 'center', gap: '40px', padding: '20px 40px', marginTop: '40px' }}>
         
-        {/* sidebar tool for the quiz phase */}
+        {/* Digital Caesar Wheel Tool */}
         {phase === 'QUIZ' && (
             <div style={sidebarStyle}>
             <strong style={{ color: '#00ff88', fontSize: '1.2rem' }}>HOW IT WORKS:</strong>
@@ -259,36 +270,33 @@ export default function EncryptionChallenge() {
                 <strong>TOOL:</strong> Use the wheel below to simulate the shift.
             </div>
 
-            {true && (
-                <div style={{ marginTop: '30px', textAlign: 'center' }}>
-                <div style={{ position: 'relative', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ ...wheelBase, transform: `rotate(-${Number(cipherShift) * (360/26)}deg)` }}>
-                        {ALPHABET.map((letter, i) => (
-                        <div key={i} style={{ ...letterStyle, transform: `rotate(${i * (360/26)}deg) translateY(-85px)` }}>{letter}</div>
-                        ))}
-                    </div>
-                    <div style={innerWheel}>
-                        {ALPHABET.map((letter, i) => (
-                        <div key={i} style={{ ...letterStyle, transform: `rotate(${i * (360/26)}deg) translateY(-55px)`, fontSize: '0.6rem', color: '#00ffff' }}>{letter}</div>
-                        ))}
-                    </div>
+            <div style={{ marginTop: '30px', textAlign: 'center' }}>
+            <div style={{ position: 'relative', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ ...wheelBase, transform: `rotate(-${Number(cipherShift) * (360/26)}deg)` }}>
+                    {ALPHABET.map((letter, i) => (
+                    <div key={i} style={{ ...letterStyle, transform: `rotate(${i * (360/26)}deg) translateY(-85px)` }}>{letter}</div>
+                    ))}
                 </div>
-                <div style={{ marginTop: '20px' }}>
-                    <label style={{ fontSize: '0.7rem' }}>KEY_SHIFT (0-25):</label>
-                    <input 
-                        type="number" 
-                        min="0" max="25" 
-                        value={cipherShift} 
-                        onChange={(e) => setCipherShift(e.target.value === '' ? '' : Number(e.target.value))} 
-                        style={cipherInput} 
-                    />
+                <div style={innerWheel}>
+                    {ALPHABET.map((letter, i) => (
+                    <div key={i} style={{ ...letterStyle, transform: `rotate(${i * (360/26)}deg) translateY(-55px)`, fontSize: '0.6rem', color: '#00ffff' }}>{letter}</div>
+                    ))}
                 </div>
-                </div>
-            )}
+            </div>
+            <div style={{ marginTop: '20px' }}>
+                <label style={{ fontSize: '0.7rem' }}>KEY_SHIFT (0-25):</label>
+                <input 
+                    type="number" 
+                    min="0" max="25" 
+                    value={cipherShift} 
+                    onChange={(e) => setCipherShift(e.target.value === '' ? '' : Number(e.target.value))} 
+                    style={cipherInput} 
+                />
+            </div>
+            </div>
             </div>
         )}
 
-        {/* main gameplay section */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
           {phase === 'TRIAGE' && (
             <>
@@ -360,7 +368,7 @@ export default function EncryptionChallenge() {
   );
 }
 
-// all the styles for cards and modals
+// styling definitions
 const containerStyle: React.CSSProperties = { height: '100vh', width: '100vw', background: '#020502', color: '#00ff88', fontFamily: "'Share Tech Mono', monospace", display: 'flex', flexDirection: 'column', overflow: 'hidden', userSelect: 'none' };
 const sidebarStyle: React.CSSProperties = { width: "300px", background: "rgba(0,20,0,0.8)", padding: "20px", border: "1px solid #005522", height: "fit-content" };
 const modalStyle: React.CSSProperties = { margin: 'auto', width: '650px', padding: '40px', border: '2px solid #00ff88', background: '#000', textAlign: 'center', boxShadow: '0 0 40px rgba(0,255,136,0.3)' };

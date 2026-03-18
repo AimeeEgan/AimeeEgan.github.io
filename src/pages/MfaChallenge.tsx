@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 import HUD from "../components/HUD";
 
-// sounds for the simon says game and system alerts
+// sounds
 import correctSound from '../assets/correct.mp3';
 import wrongSound from '../assets/wrong.mp3';
 import redSound from '../assets/red.mp3';
@@ -13,7 +13,6 @@ import yellowSound from '../assets/yellow.mp3';
 
 const COLORS = ["#ff3333", "#33ff33", "#3333ff", "#ffff33"];
 
-// difficulty settings for the three sync levels
 const LEVEL_CONFIG = [
   { level: 1, length: 4, time: 10, label: "GUEST_ACCESS_REQUEST", desc: "Basic verification for standard entry. Synchronize with the mainframe kernel to proceed." },
   { level: 2, length: 6, time: 15, label: "ADMIN_BYPASS_REQUEST", desc: "Elevated security detected. A 15-second sync window has been established for this node." },
@@ -27,29 +26,27 @@ export default function MfaChallenge() {
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
   const [sequence, setSequence] = useState<string[]>([]);
   const [userGuess, setUserGuess] = useState<string[]>([]);
-  const [gameState, setGameState] = useState<"IDLE" | "NOTIFICATION" | "FLASHING" | "INPUT" | "SUCCESS" | "FATIGUE_FLASH" | "FATIGUE_PROMPT" | "COMPLETE_SCREEN">("IDLE");
+  const [gameState, setGameState] = useState<"IDLE" | "NOTIFICATION" | "FLASHING" | "INPUT" | "SUCCESS" | "FATIGUE_FLASH" | "FATIGUE_PROMPT" | "COMPLETE_SCREEN" | "LOCKED">("IDLE");
   const [activeColor, setActiveColor] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isFatigueMode, setIsFatigueMode] = useState(false);
 
-  // loading audio into buffers to prevent lag during the fast flashing parts
+  // Check session storage for permanent lockout
+  const [isPermanentlyLocked, setIsPermanentlyLocked] = useState(sessionStorage.getItem('mfa_locked') === 'true');
+
   const audioCtx = useRef<AudioContext | null>(null);
   const buffers = useRef<Record<string, AudioBuffer>>({});
 
   useEffect(() => {
     audioCtx.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    
     const loadSound = async (name: string, url: string) => {
       try {
         const response = await fetch(url);
         const arrayBuffer = await response.arrayBuffer();
         const decodedData = await audioCtx.current!.decodeAudioData(arrayBuffer);
         buffers.current[name] = decodedData;
-      } catch (e) {
-        console.error("failed to load audio:", name, e);
-      }
+      } catch (e) { console.error("failed to load audio:", name, e); }
     };
-
     loadSound("#ff3333", redSound);
     loadSound("#33ff33", greenSound);
     loadSound("#3333ff", blueSound);
@@ -61,14 +58,12 @@ export default function MfaChallenge() {
   const playInstantSound = (name: string) => {
     if (!audioCtx.current || !buffers.current[name]) return;
     if (audioCtx.current.state === 'suspended') audioCtx.current.resume();
-
     const source = audioCtx.current.createBufferSource();
     source.buffer = buffers.current[name];
     source.connect(audioCtx.current.destination);
     source.start(0);
   };
 
-  // generates a new random sequence based on the current level
   const startLevel = () => {
     if (audioCtx.current?.state === 'suspended') audioCtx.current.resume();
     setGameState("NOTIFICATION");
@@ -84,7 +79,6 @@ export default function MfaChallenge() {
     else setGameState("FLASHING");
   };
 
-  // logic for playing back the sequence on the "phone" screen
   useEffect(() => {
     if (gameState === "FLASHING") {
       let i = 0;
@@ -104,7 +98,6 @@ export default function MfaChallenge() {
     }
   }, [gameState, sequence]);
 
-  // the rapid glitch effect for the mfa fatigue attack phase
   useEffect(() => {
     if (gameState === "FATIGUE_FLASH") {
       let count = 0;
@@ -122,7 +115,6 @@ export default function MfaChallenge() {
     }
   }, [gameState]);
 
-  // countdown timer for the input phase
   useEffect(() => {
     if (gameState === "INPUT" && timeLeft > 0) {
       const timer = setInterval(() => setTimeLeft((t) => t - 1), 1000);
@@ -134,26 +126,21 @@ export default function MfaChallenge() {
     }
   }, [gameState, timeLeft]);
 
-  // checking if the user clicks match the sequence
   const handleInput = (color: string) => {
     if (gameState !== "INPUT") return;
     playInstantSound(color); 
     const nextGuess = [...userGuess, color];
     setUserGuess(nextGuess);
-
     if (nextGuess[nextGuess.length - 1] !== sequence[nextGuess.length - 1]) {
       playInstantSound('wrong');
       penalize(150);
       setGameState("IDLE");
       return;
     }
-
     if (nextGuess.length === sequence.length) {
       playInstantSound('correct');
-      if (currentLevelIdx < 2) {
-        setGameState("SUCCESS");
-      } else {
-        // triggers the fatigue trap after level 3 is done
+      if (currentLevelIdx < 2) setGameState("SUCCESS");
+      else {
         setIsFatigueMode(true);
         setGameState("IDLE");
         setTimeout(() => startLevel(), 500);
@@ -161,37 +148,45 @@ export default function MfaChallenge() {
     }
   };
 
-  // checking if the user fell for the spam request or rejected it
   const handleFatigueResponse = (isApproval: boolean) => {
     if (isApproval) {
       playInstantSound('wrong');
       penalize(500);
-      alert("CRITICAL SECURITY BREACH: UNAUTHORIZED BYPASS APPROVED.");
-      navigate("/console");
+      // PERMANENT LOCKOUT LOGIC
+      sessionStorage.setItem('mfa_locked', 'true');
+      setIsPermanentlyLocked(true);
+      setGameState("LOCKED");
     } else {
       playInstantSound('correct');
       setGameState("COMPLETE_SCREEN");
     }
   };
 
-  // lockout view if the task is already finished
-  if (state.tasks.mfa) {
+  // --- RENDER LOGIC ---
+
+  // 1. Show the PERMANENT RED LOCKOUT screen if they failed the bypass test
+  if (isPermanentlyLocked || gameState === "LOCKED") {
     return (
       <div style={containerStyle}>
         <HUD />
-        <div style={lockoutBoxStyle}>
-          <h2 style={{ fontSize: '2rem', color: "#00ff88", textShadow: "0 0 10px #00ff88" }}>AUTH_STREAM_ENCRYPTED</h2>
-          <p style={{ color: '#88aa99', marginBottom: '30px', lineHeight: '1.6' }}>
-            Multi-factor verification complete. Authenticator tokens are fully synchronized and the MFA fatigue vulnerability has been mitigated.
+        <div style={{...lockoutBoxStyle, borderColor: '#ff3333', boxShadow: "0 0 30px rgba(255,51,51,0.3)"}}>
+          <h2 style={{ fontSize: '2.2rem', color: "#ff3333", textShadow: "0 0 15px #ff3333" }}>⚠ SECURITY_TERMINATED</h2>
+          <p style={{ color: '#ffaaaa', marginBottom: '30px', lineHeight: '1.6', fontSize: '1.1rem' }}>
+            CRITICAL SYSTEM BREACH: You approved an unauthorized bypass request. This MFA node has been permanently compromised and locked to prevent further infiltration.
           </p>
-          <button onClick={() => navigate("/console")} style={buttonStyle}>RETURN TO CONSOLE</button>
+          <div style={{ padding: '15px', border: '1px dashed #ff3333', color: '#ff3333', marginBottom: '30px', fontSize: '0.9rem' }}>
+            STATUS: PERMANENTLY_VULNERABLE
+          </div>
+          <button onClick={() => navigate("/console")} style={{...buttonStyle, background: '#ff3333'}}>
+            RETURN TO SYSTEM CONSOLE
+          </button>
         </div>
       </div>
     );
   }
 
-  // success view after beating the levels and the fatigue test
-  if (gameState === "COMPLETE_SCREEN") {
+  // 2. Show the SUCCESS screen if finished
+  if (state.tasks.mfa || gameState === "COMPLETE_SCREEN") {
     return (
       <div style={containerStyle}>
         <HUD />
@@ -200,7 +195,7 @@ export default function MfaChallenge() {
           <p style={{ color: '#88aa99', marginBottom: '30px', lineHeight: '1.6' }}>
             Verification complete. All anomalous requests have been filtered. The human firewall has held against the bypass attempt.
           </p>
-          <button onClick={() => { completeTask("mfa", 100); navigate("/console"); }} style={buttonStyle}>
+          <button onClick={() => { if(!state.tasks.mfa) completeTask("mfa", 100); navigate("/console"); }} style={buttonStyle}>
             RETURN TO SYSTEM CONSOLE
           </button>
         </div>
@@ -221,8 +216,6 @@ export default function MfaChallenge() {
       </div>
 
       <div style={{ display: "flex", gap: "40px", alignItems: "flex-start", justifyContent: "center", zIndex: 10, maxWidth: "1200px", width: "100%" }}>
-        
-        {/* educational info on mfa basics */}
         <div style={{ width: "320px", background: "rgba(0,20,0,0.8)", padding: "25px", border: "1px solid #005522", height: "fit-content" }}>
           <strong style={{ color: '#00ff88', fontSize: '1.2rem', letterSpacing: '1px' }}>HOW IT WORKS:</strong>
           <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -235,7 +228,6 @@ export default function MfaChallenge() {
           </div>
         </div>
 
-        {/* the simulated mobile device for code verification */}
         <div style={phoneFrameStyle}>
           <div style={phoneScreenStyle}>
             {gameState === "FATIGUE_PROMPT" ? (
@@ -259,7 +251,6 @@ export default function MfaChallenge() {
           </div>
         </div>
 
-        {/* main desktop console for inputting colors */}
         <div style={consoleBoxStyle}>
           <div style={{ marginBottom: "20px", borderBottom: "1px solid #005522", paddingBottom: "10px" }}>
             <div style={{ fontSize: "1.1rem", color: "#fff", lineHeight: "1.4" }}>
@@ -276,21 +267,14 @@ export default function MfaChallenge() {
               )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px", marginBottom: "30px" }}>
                 {COLORS.map((c) => (
-                  <button 
-                    key={c} 
-                    onClick={() => handleInput(c)} 
-                    disabled={gameState !== "INPUT"} 
-                    style={{ height: "90px", background: c, opacity: gameState === "INPUT" ? 1 : 0.1, border: "none", cursor: "pointer", borderRadius: "8px" }} 
-                  />
+                  <button key={c} onClick={() => handleInput(c)} disabled={gameState !== "INPUT"} style={{ height: "90px", background: c, opacity: gameState === "INPUT" ? 1 : 0.1, border: "none", cursor: "pointer", borderRadius: "8px" }} />
                 ))}
               </div>
               {gameState === "IDLE" && (
                 <button onClick={startLevel} style={buttonStyle}>INITIATE AUTH LEVEL {currentLevelIdx + 1}</button>
               )}
               {gameState === "SUCCESS" && (
-                <button onClick={() => { setCurrentLevelIdx(prev => prev + 1); setGameState("IDLE"); }} style={buttonStyle}>
-                  LEVEL COMPLETE: SYNC NEXT DEVICE
-                </button>
+                <button onClick={() => { setCurrentLevelIdx(prev => prev + 1); setGameState("IDLE"); }} style={buttonStyle}>LEVEL COMPLETE: SYNC NEXT DEVICE</button>
               )}
           </div>
         </div>
@@ -299,7 +283,7 @@ export default function MfaChallenge() {
   );
 }
 
-// all the main layouts and ui component styles
+// styles
 const containerStyle: React.CSSProperties = { width: "100vw", height: "100vh", backgroundColor: "#020502", color: "#00ff88", fontFamily: "'Share Tech Mono', monospace", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" };
 const consoleBoxStyle: React.CSSProperties = { width: "420px", padding: "30px", border: "2px solid #005522", background: "rgba(0,10,0,0.9)", minHeight: "400px", display: "flex", flexDirection: "column" };
 const lockoutBoxStyle: React.CSSProperties = { margin: 'auto', textAlign: 'center', border: '2px solid #00ff88', padding: '50px', background: '#000', maxWidth: '700px', boxShadow: "0 0 30px rgba(0,255,136,0.2)" };
@@ -308,17 +292,4 @@ const phoneScreenStyle: React.CSSProperties = { flexGrow: 1, border: "1px solid 
 const buttonStyle: React.CSSProperties = { width: "100%", padding: "20px", background: "#00ff88", color: "#000", border: "none", fontWeight: "bold", cursor: "pointer", fontFamily: "inherit" };
 const notificationStyle: React.CSSProperties = { padding: "20px", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center", height: "100%" };
 const fatiguePromptStyle: React.CSSProperties = { padding: "20px", textAlign: "center", background: "#000", height: "100%", display: 'flex', flexDirection: 'column', justifyContent: 'center' };
-
-const neutralButtonStyle: React.CSSProperties = { 
-  width: "100%", 
-  padding: "15px", 
-  background: "#1a1a1a", 
-  color: "#ffffff", 
-  border: "1px solid #444", 
-  fontWeight: "bold", 
-  cursor: "pointer", 
-  fontFamily: "inherit",
-  marginBottom: '10px',
-  fontSize: '0.8rem',
-  letterSpacing: '1px'
-};
+const neutralButtonStyle: React.CSSProperties = { width: "100%", padding: "15px", background: "#1a1a1a", color: "#ffffff", border: "1px solid #444", fontWeight: "bold", cursor: "pointer", fontFamily: "inherit", marginBottom: '10px', fontSize: '0.8rem', letterSpacing: '1px' };

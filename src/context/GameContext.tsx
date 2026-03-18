@@ -1,5 +1,11 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+
+// audio assets for time warnings
+import alert15 from '../assets/15mins.mp3';
+import alertHalf from '../assets/halfway.mp3';
+import alert5 from '../assets/5mins.mp3';
+import alert2 from '../assets/2mins.mp3';
 
 export type TaskKeys = 'wifi' | 'vpn' | 'password' | 'firewall' | 'mfa' | 'encryption' | 'forensics' | 'incident';
 
@@ -8,7 +14,7 @@ type GameState = {
   timeLeft: number;
   isGameOver: boolean;
   isPaused: boolean; 
-  isDecisionPhase: boolean; // Track the 15-minute expiration choice
+  isDecisionPhase: boolean; // track the 15-minute expiration choice
   tasks: Record<TaskKeys, boolean>;
   wifiCompromised: boolean; 
 };
@@ -25,7 +31,7 @@ type GameContextType = {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
-// Constants
+// constants
 const START_TIME = 15 * 60; 
 const START_VULNERABILITIES = 700; 
 const VULNERABILITY_CAP = 5000; 
@@ -39,7 +45,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return {
           ...parsed,
           isPaused: false,
-          isDecisionPhase: false, // Reset decision phase on refresh
+          isDecisionPhase: false, // reset decision phase on refresh
           vulnerabilities: parsed.vulnerabilities ?? START_VULNERABILITIES
         };
       } catch (e) {
@@ -60,16 +66,54 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     };
   });
 
-  // 1. MAIN GAME TIMER WITH DECISION PHASE LOGIC
+  // keeps track of which warnings have already been played to avoid repeats
+  const playedAlerts = useRef({
+    start: false,
+    halfway: false,
+    fiveMin: false,
+    twoMin: false
+  });
+
+  // helper function to play the tts files
+  const playWarning = (file: string) => {
+    const audio = new Audio(file);
+    audio.play().catch(e => console.warn("audio playback blocked by browser:", e));
+  };
+
+  // 1. MAIN GAME TIMER WITH DECISION PHASE & AUDIO LOGIC
   useEffect(() => {
     if (state.isGameOver || state.isPaused) return;
 
-    // Trigger decision phase when time hits zero
+    // trigger decision phase when time hits zero
     if (state.timeLeft <= 0) {
         if (!state.isDecisionPhase) {
             setState(prev => ({ ...prev, isDecisionPhase: true }));
         }
         return;
+    }
+
+    // time-based audio warning triggers
+    const time = state.timeLeft;
+    
+    // 15 minute mark (start)
+    if (time === 900 && !playedAlerts.current.start) {
+        playWarning(alert15);
+        playedAlerts.current.start = true;
+    } 
+    // halfway mark (7m 30s)
+    else if (time === 450 && !playedAlerts.current.halfway) {
+        playWarning(alertHalf);
+        playedAlerts.current.halfway = true;
+    }
+    // 5 minutes remaining
+    else if (time === 300 && !playedAlerts.current.fiveMin) {
+        playWarning(alert5);
+        playedAlerts.current.fiveMin = true;
+    }
+    // 2 minutes remaining
+    else if (time === 120 && !playedAlerts.current.twoMin) {
+        playWarning(alert2);
+        playedAlerts.current.twoMin = true;
     }
 
     const timer = setInterval(() => {
@@ -96,14 +140,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     return () => clearInterval(leakInterval);
   }, [state.wifiCompromised, state.isGameOver, state.isPaused, state.isDecisionPhase]);
 
-  // Actions
+  // actions
   const pauseTimer = () => setState(prev => ({ ...prev, isPaused: true }));
 
   const extendTime = (seconds: number) => {
     setState(prev => ({ 
         ...prev, 
         timeLeft: prev.timeLeft + seconds,
-        isDecisionPhase: false // Resume game and hide decision modal
+        isDecisionPhase: false // resume game and hide decision modal
     }));
   };
 
@@ -132,6 +176,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const resetGame = () => {
+    // reset audio alerts memory
+    playedAlerts.current = { start: false, halfway: false, fiveMin: false, twoMin: false };
+    
     const newState = {
       vulnerabilities: START_VULNERABILITIES,
       timeLeft: START_TIME,
